@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import time
+import math
 
 
 def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path, sess, columns):
@@ -52,8 +53,10 @@ def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path, s
             p3 = time.time()
             #auto_corrs = librosa.core.autocorrelate(np.array(center_clipped))
             pitch, _, _ = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
+            pitch = [0 if math.isnan(p) else p for p in pitch]
             p4 = time.time()
             print("audio size: {}, pitch:{}".format(len(y)/44100.0, (p4-p3)))
+
             feature_list.append(np.mean(pitch))
             feature_list.append(np.std(pitch))
             #feature_list.append(1000 * np.max(auto_corrs)/len(auto_corrs))  # auto_corr_max (scaled by 1000)
@@ -62,6 +65,7 @@ def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path, s
             df_features = df_features.append(pd.DataFrame(feature_list, index=columns).transpose(), ignore_index=True)
         except Exception as e:
             print('Some exception occured: {}'.format(e))
+    return df_features
 
 
 def main():
@@ -69,7 +73,7 @@ def main():
                     'sur': 6, 'neu': 7, 'xxx': 8, 'oth': 8}
 
     data_dir = '../data/pre-processed/'
-    labels_path = '{}df_iemocap.csv'.format(data_dir)
+    labels_path = '{}df_iemocap_test.csv'.format(data_dir)
     audio_vectors_path = '{}audio_vectors_'.format(data_dir)
     #columns = ['wav_file', 'label', 'sig_mean', 'sig_std', 'rmse_mean',
     #           'rmse_std', 'silence', 'harmonic', 'auto_corr_max',
@@ -80,7 +84,7 @@ def main():
     df_features = pd.DataFrame(columns=columns)
     labels_df = pd.read_csv(labels_path)
     for sess in range(1, 2):
-        add_session_data(df_features, labels_df, emotion_dict,
+        df_features = add_session_data(df_features, labels_df, emotion_dict,
                          '{}{}.pkl'.format(audio_vectors_path, sess), sess, columns)
     df_features.to_csv('../data/pre-processed/audio_features.csv', index=False)
 
