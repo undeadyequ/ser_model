@@ -16,22 +16,23 @@ def extract_info():
 
     extract_info: None -> Dict
     """
+    iemocap = '/Users/luoxuan/Data/IEMOCAP/Session{}/dialog/EmoEvaluation/'
     info_dict = {'start_times': [], 'end_times': [], 'wav_file_names': [],
                  'emotions': [], 'vals': [], 'acts': [], 'doms': []}
 
     # regex used to identify useful info in the dataset files
     info_line = re.compile(r'\[.+\]\n', re.IGNORECASE)
-    for sess in range(1, 6):
-        emo_evaluation_dir = 'data/IEMOCAP_full_release/Session{}/dialog/EmoEvaluation/'.format(sess)
+    for sess in range(1, 2):
+        emo_evaluation_dir = iemocap.format(sess)
         # Only include the session files
         evaluation_files = [l for l in os.listdir(emo_evaluation_dir)
-                            if 'Ses' in l]
+                            if l.startswith("Ses")]
         for file in evaluation_files:
             with open(emo_evaluation_dir + file) as f:
                 content = f.read()
             # grab the important stuff
-            info_lines = re.findall(info_lines, content)
-            for line in info_line[1:]:  # skipping the first header line
+            info_lines = re.findall(info_line, content)
+            for line in info_lines[1:]:  # skipping the first header line
                 # Refer to the dataset to see how `line` looks like
                 start_end_time, wav_file_name, emotion, val_act_dom = \
                     line.strip().split('\t')
@@ -65,7 +66,7 @@ def compile_dataset(info_dict):
     df_iemocap['act'] = info_dict['acts']
     df_iemocap['dom'] = info_dict['doms']
     # Finally, save to a file
-    df_iemocap.to_csv('data/pre-processed/df_iemocap.csv', index=False)
+    df_iemocap.to_csv('../data/pre-processed/df_iemocap.csv', index=False)
 
 
 def main():

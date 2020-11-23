@@ -39,15 +39,15 @@ def process_session(iemocap_dir, labels_df, sr, sess):
                 audio_vectors[truncated_wav_file_name] = truncated_wav_vector
         except Exception as e:
             print('An exception occured for {}'.format(orig_wav_file))
-    with open('data/pre-processed/audio_vectors_{}.pkl'.format(sess), 'wb') as f:
+    with open('../data/pre-processed/audio_vectors_{}.pkl'.format(sess), 'wb') as f:
         pickle.dump(audio_vectors, f)
 
 
 def main():
     sampling_rate = 44100
-    iemocap_dir = 'data/IEMOCAP_full_release/'
-    labels_df = pd.read_csv('data/pre-processed/df_iemocap.csv')
-    for sess in range(1, 6):
+    iemocap_dir = '/Users/luoxuan/Data/IEMOCAP/'
+    labels_df = pd.read_csv('../data/pre-processed/df_iemocap.csv')
+    for sess in range(1, 2):
         # Note that compiling this way will take too much time So you might
         # consider parallelizing this process
         process_session(iemocap_dir, labels_df, sampling_rate, sess)

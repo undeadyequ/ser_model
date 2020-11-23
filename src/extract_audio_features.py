@@ -2,17 +2,15 @@
 This script extract features from existing audio vectors
 """
 
-import os
-import math
-import random
 import pickle
 import librosa
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+import time
 
 
-def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path):
+def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path, sess, columns):
     audio_vectors = pickle.load(open(audio_vectors_path, 'rb'))
     for index, row in tqdm(labels_df[labels_df['wav_file'].str.contains(
             'Ses0{}'.format(sess))].iterrows()):
@@ -26,7 +24,7 @@ def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path):
             feature_list.append(sig_mean)  # sig_mean
             feature_list.append(np.std(y))  # sig_std
 
-            rmse = librosa.feature.rmse(y + 0.0001)[0]
+            rmse = librosa.feature.rms(y + 0.0001)[0]
             feature_list.append(np.mean(rmse))  # rmse_mean
             feature_list.append(np.std(rmse))  # rmse_std
 
@@ -51,9 +49,15 @@ def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path):
                     center_clipped.append(s + cl)
                 elif np.abs(s) < cl:
                     center_clipped.append(0)
-            auto_corrs = librosa.core.autocorrelate(np.array(center_clipped))
-            feature_list.append(1000 * np.max(auto_corrs)/len(auto_corrs))  # auto_corr_max (scaled by 1000)
-            feature_list.append(np.std(auto_corrs))  # auto_corr_std
+            p3 = time.time()
+            #auto_corrs = librosa.core.autocorrelate(np.array(center_clipped))
+            pitch, _, _ = librosa.pyin(y, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
+            p4 = time.time()
+            print("audio size: {}, pitch:{}".format(len(y)/44100.0, (p4-p3)))
+            feature_list.append(np.mean(pitch))
+            feature_list.append(np.std(pitch))
+            #feature_list.append(1000 * np.max(auto_corrs)/len(auto_corrs))  # auto_corr_max (scaled by 1000)
+            #feature_list.append(np.std(auto_corrs))  # auto_corr_std
 
             df_features = df_features.append(pd.DataFrame(feature_list, index=columns).transpose(), ignore_index=True)
         except Exception as e:
@@ -64,19 +68,21 @@ def main():
     emotion_dict = {'ang': 0, 'hap': 1, 'exc': 2, 'sad': 3, 'fru': 4, 'fea': 5,
                     'sur': 6, 'neu': 7, 'xxx': 8, 'oth': 8}
 
-    data_dir = 'data/pre-processed/'
+    data_dir = '../data/pre-processed/'
     labels_path = '{}df_iemocap.csv'.format(data_dir)
     audio_vectors_path = '{}audio_vectors_'.format(data_dir)
+    #columns = ['wav_file', 'label', 'sig_mean', 'sig_std', 'rmse_mean',
+    #           'rmse_std', 'silence', 'harmonic', 'auto_corr_max',
+    #           'auto_corr_std']
     columns = ['wav_file', 'label', 'sig_mean', 'sig_std', 'rmse_mean',
-               'rmse_std', 'silence', 'harmonic', 'auto_corr_max',
-               'auto_corr_std']
+               'rmse_std', 'silence', 'harmonic', 'pitch_mean',
+               'pitch_std']
     df_features = pd.DataFrame(columns=columns)
     labels_df = pd.read_csv(labels_path)
-    for sess in range(1, 6):
+    for sess in range(1, 2):
         add_session_data(df_features, labels_df, emotion_dict,
-                         '{}{}.pkl'.format(audio_vectors_path, sess))
-    df_features.to_csv('data/pre-processed/audio_features.csv', index=False)
-
+                         '{}{}.pkl'.format(audio_vectors_path, sess), sess, columns)
+    df_features.to_csv('../data/pre-processed/audio_features.csv', index=False)
 
 if __name__ == '__main__':
     main()
