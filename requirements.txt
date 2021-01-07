@@ -7,3 +7,4 @@ pandas
 librosa
 matplotlib
 tqdm
+seaborn

@@ -73,7 +73,7 @@ def main():
                     'sur': 6, 'neu': 7, 'xxx': 8, 'oth': 8}
 
     data_dir = '../data/pre-processed/'
-    labels_path = '{}df_iemocap_test.csv'.format(data_dir)
+    labels_path = '{}df_iemocap.csv'.format(data_dir)
     audio_vectors_path = '{}audio_vectors_'.format(data_dir)
     #columns = ['wav_file', 'label', 'sig_mean', 'sig_std', 'rmse_mean',
     #           'rmse_std', 'silence', 'harmonic', 'auto_corr_max',

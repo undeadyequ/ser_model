@@ -16,7 +16,7 @@ def extract_info():
 
     extract_info: None -> Dict
     """
-    iemocap = '/Users/luoxuan/Data/IEMOCAP/Session{}/dialog/EmoEvaluation/'
+    iemocap = '/home/Data/IEMOCAP_session_only/Session{}/dialog/EmoEvaluation/'
     info_dict = {'start_times': [], 'end_times': [], 'wav_file_names': [],
                  'emotions': [], 'vals': [], 'acts': [], 'doms': []}
 
