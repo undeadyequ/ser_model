@@ -22,7 +22,7 @@ def extract_info():
 
     # regex used to identify useful info in the dataset files
     info_line = re.compile(r'\[.+\]\n', re.IGNORECASE)
-    for sess in range(1, 2):
+    for sess in range(1, 6):
         emo_evaluation_dir = iemocap.format(sess)
         # Only include the session files
         evaluation_files = [l for l in os.listdir(emo_evaluation_dir)

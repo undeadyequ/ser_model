@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 def load_data(batched=True, test=False, file_dir='../../data/s2e/'):
     bs = config['batch_size']
     ftype = 'test' if test else 'train'
-    df = pd.read_csv('{}modified_df_{}.csv'.format(file_dir, ftype))
+    df = pd.read_csv('{}audio_{}.csv'.format(file_dir, ftype))
     # 0th index in label, rest all are features
-    data = (np.array(df[df.columns[1:]]), np.array(df[df.columns[0]]))
+    data = (np.array(df[df.columns[2:]]), np.array(df[df.columns[1]]))
     if test or not batched:
         return [torch.FloatTensor(data[0]), torch.LongTensor(data[1])]
     data = list(zip(data[0], data[1]))

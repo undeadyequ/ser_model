@@ -22,14 +22,31 @@ from extract_audio_features import extract_feature
 import os
 import argparse
 import logging
+from sklearn.preprocessing import MinMaxScaler
 
-logging.basicConfig(filename="memo.txt", filemode="a", format="%(asctime)s - %(message)s" ,level=logging.INFO)
+
+
+
 
 def infer_audio_prob(clf, audio):
     sr = 44100
     audio_v, _ = librosa.load(audio, sr)
+    # Extract feature
     feats = extract_feature(audio_v)
-    audio_prob = clf.predict_proba(feats)
+
+    # Normalize feature with train_feats_stats
+    train_feats_stats_file = "../data/s2e/feats_stats.csv"
+    train_feats_stats = pd.read_csv(train_feats_stats_file)
+    scalar = MinMaxScaler()
+    scalar.fit(train_feats_stats)
+    feats_norm = scalar.transform(feats)
+
+    # Check out of range feats
+    if feats_norm.max(axis=1) > 1 or feats_norm.min(axis=1) < 0:
+        logging.warning("Test feats is out of range {}".format(feats_norm))
+    #logging.info("After feats norm {}".format(feats_norm))
+
+    audio_prob = clf.predict_proba(feats_norm)
     return audio_prob[0]
 
 
@@ -117,22 +134,32 @@ def infer_audio_dir(clf_f, audio_dir, emotion_dict):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--audio", default="../data/test_audio/Ses01F_impro01_M003.wav")
+    #parser.add_argument("--audio", default="../data/test_audio/Ses01F_impro01_M003.wav")
+    parser.add_argument("--audio", default="/home/Data/blizzard2013_part/wav1/jane_eyre/CB-JE-01-01.wav")
+
+    #parser.add_argument("--audio_dir", default="/home/Data/blizzard2013_part/wav1/jane_eyre")
     parser.add_argument("--audio_dir", default="")
+
     parser.add_argument("--clf", default="../classifier/rf_classifier.pkl")
+    parser.add_argument("--memo", default="memo.txt")
 
     args = parser.parse_args()
+
+    logging.basicConfig(filename=args.memo, filemode="a", format="%(asctime)s - %(message)s", level=logging.INFO)
+
     emotion_dict = {'ang': 0,
                     'hap': 1,
                     'sad': 2,
                     'fea': 3,
                     'sur': 4,
                     'neu': 5}
-
-    logging.info("emotions are: {}".format(emotion_dict.keys()))
+    logging.info("Predict start")
+    logging.info("Target emotions {}".format(emotion_dict.keys()))
     if args.audio_dir != "":
+        logging.info("Predict dir{} with {}".format(args.audio_dir, args.clf))
         audio_list = [os.path.join(args.audio_dir, a) for a in os.listdir(args.audio_dir) if a.endswith(".wav")]
-        for audio in audio_list:
+        for audio in sorted(audio_list):
             infer_audio(args.clf, audio, emotion_dict)
     else:
+        logging.info("Predict {} with {}".format(args.audio, args.clf))
         infer_audio(args.clf, args.audio, emotion_dict)

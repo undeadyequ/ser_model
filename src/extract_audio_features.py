@@ -10,6 +10,8 @@ from tqdm import tqdm
 import time
 import math
 import collections
+import argparse
+
 
 
 def add_session_data(df_features, labels_df, emotion_dict, audio_vectors_path, sess, columns):
@@ -143,10 +145,17 @@ def main():
                'pitch_std']
     df_features = pd.DataFrame(columns=columns)
     labels_df = pd.read_csv(labels_path)
-    for sess in range(1, 2):
-        df_features = add_session_data(df_features, labels_df, emotion_dict,
-                         '{}{}.pkl'.format(audio_vectors_path, sess), sess, columns)
-    df_features.to_csv('../data/pre-processed/audio_features.csv', index=False)
+    #for sess in range(1, 6):
+    #    df_features = add_session_data(df_features, labels_df, emotion_dict,
+    #                     '{}{}.pkl'.format(audio_vectors_path, sess), sess, columns)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sess", default=1)
+    args = parser.parse_args()
+
+    df_features = add_session_data(df_features, labels_df, emotion_dict,
+                                   '{}{}.pkl'.format(audio_vectors_path, int(args.sess)), int(args.sess), columns)
+    out = '../data/pre-processed/audio_features_{}.csv'.format(args.sess)
+    df_features.to_csv(out, index=False)
 
 
 if __name__ == '__main__':
